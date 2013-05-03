@@ -1,0 +1,28 @@
+{
+	"name": "25th/zf2-exception-mailer-module",
+	"description": "Zend Framework 2 Module that provides a Simple Exception Mailer functionality",
+	"type" : "library",
+	"keywords": [
+		"exception",
+		"mailer",
+		"module",
+		"zf2"
+	],
+	"homepage": "http://www.25th-floor.com/",
+	"authors": [
+		{
+			"name": "Thomas Subera",
+			"email": "ts@25th-floor.com"
+		}
+	],
+	"require": {
+		"php": ">=5.3",
+		"zendframework/zend-mvc": "2.*",
+		"zendframework/zend-servicemanager": "2.*"
+	},
+	"autoload": {
+		"psr-0": {
+			"ExceptionMailer\\": "src/"
+		}
+	}
+}
