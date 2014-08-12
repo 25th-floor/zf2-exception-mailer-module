@@ -104,6 +104,10 @@ class ErrorHandlingService {
 			return;
 		}
 
+        if ($this->config['exception_mailer']['exceptionInSubject']) {
+            $subject .= ' '.$e->getMessage();
+        }
+
 		$message = new Message();
 		$message->addFrom($sender)
 			->addTo($recipients)

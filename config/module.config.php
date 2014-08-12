@@ -9,6 +9,7 @@ return array(
 //			'your@mail.com',
 		),
 		'subject' => 'My Exception Mailer',
+        'exceptionInSubject' => false,
 
 		// HTML Templates
 		'useTemplate' => false,
