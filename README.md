@@ -43,6 +43,11 @@ return array(
 );
 ```
 
+### Ignore Exceptions
+
+It's also possible to ignore certain Exceptions. Just let them implement the IgnoreExceptionInterface and they will be 
+ignored.
+
 ### HTML Emails
 
 For HTML Emails set useTemplate to true and use the template parameter for your template configuration.

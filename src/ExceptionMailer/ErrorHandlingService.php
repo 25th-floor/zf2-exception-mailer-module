@@ -19,112 +19,119 @@ use Zend\View\Renderer\PhpRenderer;
 
 /**
  * Class ErrorHandlingService
+ *
  * @package ExceptionMailer
- * @see http://akrabat.com/zend-framework-2/simple-logging-of-zf2-exceptions/
+ * @see     http://akrabat.com/zend-framework-2/simple-logging-of-zf2-exceptions/
  */
-class ErrorHandlingService {
+class ErrorHandlingService
+{
 
-	/**
-	 * @var array
-	 */
-	protected $config;
+    /**
+     * @var array
+     */
+    protected $config;
 
-	/**
-	 * @var ServiceManager
-	 */
-	protected $sm;
+    /**
+     * @var ServiceManager
+     */
+    protected $sm;
 
-	function __construct(array $config)
-	{
-		$this->config = $config;
-	}
+    function __construct(array $config)
+    {
+        $this->config = $config;
+    }
 
-	/**
-	 * @param \Zend\ServiceManager\ServiceManager $sm
-	 *
-	 * @return ErrorHandlingService
-	 */
-	public function setServiceManager($sm)
-	{
-		$this->sm = $sm;
-		return $this;
-	}
+    /**
+     * @param \Zend\ServiceManager\ServiceManager $sm
+     *
+     * @return ErrorHandlingService
+     */
+    public function setServiceManager($sm)
+    {
+        $this->sm = $sm;
+        return $this;
+    }
 
-	/**
-	 * @return \Zend\ServiceManager\ServiceManager
-	 */
-	public function getServiceManager()
-	{
-		return $this->sm;
-	}
+    /**
+     * @return \Zend\ServiceManager\ServiceManager
+     */
+    public function getServiceManager()
+    {
+        return $this->sm;
+    }
 
-	/**
-	 * @param ViewModel $model
-	 *
-	 * @return \Zend\Mime\Message
-	 */
-	public function getHtmlBody(ViewModel $model)
-	{
-		/** @var PhpRenderer $view */
-		$view = $this->getServiceManager()->get('ViewRenderer');
+    /**
+     * @param ViewModel $model
+     *
+     * @return \Zend\Mime\Message
+     */
+    public function getHtmlBody(ViewModel $model)
+    {
+        /** @var PhpRenderer $view */
+        $view = $this->getServiceManager()->get('ViewRenderer');
 
-		$model = clone($model);
-		$model->setTemplate($this->config['exception_mailer']['template']);
+        $model = clone($model);
+        $model->setTemplate($this->config['exception_mailer']['template']);
 
-		$content = $view->render($model);
+        $content = $view->render($model);
 
-		$text = new Part('');
-		$text->type = "text/plain";
+        $text = new Part('');
+        $text->type = "text/plain";
 
-		$html = new Part($content);
-		$html->type = Mime::TYPE_HTML;
+        $html = new Part($content);
+        $html->type = Mime::TYPE_HTML;
 
-		$msg = new \Zend\Mime\Message();
-		$msg->setParts(Array($text, $html));
-		return $msg;
-	}
+        $msg = new \Zend\Mime\Message();
+        $msg->setParts(Array($text, $html));
+        return $msg;
+    }
 
-	/**
-	 * @param \Exception $e
-	 * @param null $viewModel
-	 */
-	public function mailException(\Exception $e, $viewModel = null)
-	{
-		// Mail
-		if (!$this->config['exception_mailer']['send']) {
-			return;
-		}
-
-		$subject = $this->config['exception_mailer']['subject'];
-		$sender = $this->config['exception_mailer']['sender'];
-		$recipients = $this->config['exception_mailer']['recipients'];
-
-		// no one to send it to
-		if (empty($sender) || empty ($recipients)) {
-			return;
-		}
-
-        if ($this->config['exception_mailer']['exceptionInSubject']) {
-            $subject .= ' '.$e->getMessage();
+    /**
+     * @param \Exception $e
+     * @param null       $viewModel
+     */
+    public function mailException(\Exception $e, $viewModel = null)
+    {
+        // Mail
+        if (!$this->config['exception_mailer']['send']) {
+            return;
         }
 
-		$message = new Message();
-		$message->addFrom($sender)
-			->addTo($recipients)
-			->setSubject($subject)
-			->setEncoding('UTF-8');
+        $subject = $this->config['exception_mailer']['subject'];
+        $sender = $this->config['exception_mailer']['sender'];
+        $recipients = $this->config['exception_mailer']['recipients'];
 
-		// check if we should use the template
-		if ($this->getServiceManager() !== null
-			&& $this->config['exception_mailer']['useTemplate'] == true
-			&& $viewModel instanceof ViewModel)
-		{
-			$message->setBody($this->getHtmlBody($viewModel));
-		} else {
-			$message->setBody($e->getTraceAsString());
-		}
+        // no one to send it to
+        if (empty($sender) || empty ($recipients)) {
+            return;
+        }
 
-		$transport = new Sendmail();
-		$transport->send($message);
-	}
+        // should we ignore the exception
+        if ($e instanceof IgnoreExceptionInterface) {
+            return;
+        }
+
+        if ($this->config['exception_mailer']['exceptionInSubject']) {
+            $subject .= ' ' . $e->getMessage();
+        }
+
+        $message = new Message();
+        $message->addFrom($sender)
+            ->addTo($recipients)
+            ->setSubject($subject)
+            ->setEncoding('UTF-8');
+
+        // check if we should use the template
+        if ($this->getServiceManager() !== null
+            && $this->config['exception_mailer']['useTemplate'] == true
+            && $viewModel instanceof ViewModel
+        ) {
+            $message->setBody($this->getHtmlBody($viewModel));
+        } else {
+            $message->setBody($e->getTraceAsString());
+        }
+
+        $transport = new Sendmail();
+        $transport->send($message);
+    }
 }
