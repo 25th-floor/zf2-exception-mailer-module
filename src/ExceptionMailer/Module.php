@@ -6,28 +6,33 @@ use Zend\ServiceManager\ServiceManager;
 
 class Module
 {
-	public function onBootstrap(MvcEvent $e)
-	{
-		// Exception Handling
-		$services = $e->getApplication()->getServiceManager();
-		$eventManager = $e->getApplication()->getEventManager();
-		$eventManager->attach('dispatch.error', function($event) use ($services) {
-			/** @var $event MvcEvent */
-			if (!$event->isError()) {
-				return;
-			}
-			$exception = $event->getResult()->exception;
-			if (!$exception) {
-				return;
-			}
-			$service = $services->get('ExceptionMailer\ErrorHandling');
-			$service->mailException($exception, $event->getResult());
-		});
-	}
+    public function onBootstrap(MvcEvent $e)
+    {
+        // Exception Handling
+        $services = $e->getApplication()->getServiceManager();
+        $eventManager = $e->getApplication()->getEventManager();
+        $eventManager->attach('dispatch.error', function($event) use ($services) {
+            /** @var $event MvcEvent */
+            if (!$event->isError()) {
+                return;
+            }
+            $exception = $event->getResult()->exception;
+            if (!$exception) {
+                return;
+            }
+            /** @var ErrorHandlingService $service */
+            $service = $services->get('ExceptionMailer\ErrorHandling');
+            if ($exception instanceof \Exception) {
+                $service->mailException($exception, $event->getResult());
+            } elseif ($exception instanceof \Error) {
+                $service->mailError($exception, $event->getResult());
+            }
+        });
+    }
 
     public function getConfig()
     {
-	    return include __DIR__ . '/../../config/module.config.php';
+        return include __DIR__ . '/../../config/module.config.php';
     }
 
     public function getAutoloaderConfig()
@@ -41,18 +46,18 @@ class Module
         );
     }
 
-	public function getServiceConfig()
-	{
-		return array(
-			'factories' => array(
-				'ExceptionMailer\ErrorHandling' =>  function($sm) {
-					/** @var ServiceManager $sm */
-					$config = $sm->get('config');
-					$service = new ErrorHandlingService($config);
-					$service->setServiceManager($sm);
-					return $service;
-				},
-			),
-		);
-	}
+    public function getServiceConfig()
+    {
+        return array(
+            'factories' => array(
+                'ExceptionMailer\ErrorHandling' =>  function($sm) {
+                    /** @var ServiceManager $sm */
+                    $config = $sm->get('config');
+                    $service = new ErrorHandlingService($config);
+                    $service->setServiceManager($sm);
+                    return $service;
+                },
+            ),
+        );
+    }
 }
