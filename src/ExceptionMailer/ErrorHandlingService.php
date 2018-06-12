@@ -87,10 +87,24 @@ class ErrorHandlingService
     }
 
     /**
+     * @param \Error $e
+     * @param null $viewModel
+     */
+    public function mailError(\Error $e, $viewModel = null)
+    {
+        $this->send($e, $viewModel);
+    }
+
+    /**
      * @param \Exception $e
      * @param null       $viewModel
      */
     public function mailException(\Exception $e, $viewModel = null)
+    {
+        $this->send($e, $viewModel);
+    }
+
+    private function send($e, $viewModel = null)
     {
         // Mail
         if (!$this->config['exception_mailer']['send']) {
